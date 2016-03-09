@@ -1,0 +1,199 @@
+;; bars
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+
+;; movement
+(global-set-key (kbd "C-<right>") 'forward-word)
+(global-set-key (kbd "C-<left>") 'backward-word)
+(global-set-key [(shift left)] 'windmove-left)          ; move to left windnow
+(global-set-key [(shift right)] 'windmove-right)        ; move to right window
+(global-set-key [(shift up)] 'windmove-up)              ; move to upper window
+(global-set-key [(shift down)] 'windmove-down)          ; move to downer window
+
+;; save hook
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+;; colors
+(set-background-color "DarkSlateGray")
+(set-foreground-color "Wheat")
+(set-cursor-color "Orchid")
+
+;; install
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/") t)
+
+(package-initialize)
+
+(require 'ido)
+(ido-mode t)
+
+(require 'helm)
+(global-set-key (kbd "M-x") 'helm-M-x)
+(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+(require 'key-chord)
+(setq key-chord-two-keys-delay 0.3)
+(setq key-chord-one-key-delay 0.5)
+(key-chord-define-global "uu" 'undo)
+(key-chord-define-global "xf" 'helm-find-files)
+(key-chord-define-global "yy" 'helm-M-x)
+(key-chord-define-global "xs" 'save-buffer)
+(key-chord-define-global "xk" 'kill-buffer)
+(key-chord-define-global "xx" 'delete-other-windows)
+(key-chord-define-global "bb" 'ido-switch-buffer)
+
+(key-chord-mode +1)
+
+;; config
+(global-font-lock-mode t)               ;Font locking in all buffers
+(global-auto-revert-mode t)             ;Revert buffers automatically
+(show-paren-mode 1)                     ;Show matching parenthesis
+(fset 'yes-or-no-p 'y-or-n-p)
+(setq-default indent-tabs-mode nil)
+(setq text-mode-hook 'turn-on-auto-fill)
+(setq fill-column 72)
+(setq
+ default-major-mode 'text-mode
+ inhibit-startup-message t
+ column-number-mode t
+ transient-mark-mode t
+ use-dialog-box nil
+ case-fold-search t
+ make-backup-files nil
+ compilation-window-height 15
+ compilation-scroll-output t
+)
+
+(delete-selection-mode 1)
+(transient-mark-mode 1)
+
+;; smart parenthetic stuff
+(defun insert-around-region (a b) "insert a and b around current region"
+  (if mark-active
+      (let ()
+        (if (> (point) (mark)) (exchange-point-and-mark))
+        (insert a)
+        (exchange-dot-and-mark)
+      (insert b))
+    (let () (insert a) (insert b) (backward-char 1))
+))
+(defun insert-parentheses () "insert parentheses around region"
+  (interactive) (insert-around-region "(" ")"))
+(defun insert-brackets () "insert brackets around region"
+  (interactive) (insert-around-region "[" "]"))
+(defun insert-braces () "insert curly braces around region"
+  (interactive) (insert-around-region "{" "}"))
+(defun insert-quotes () "insert quotes around region"
+  (interactive) (insert-around-region "\"" "\""))
+
+(global-set-key "(" 'insert-parentheses)
+(global-set-key "[" 'insert-brackets)
+(global-set-key "{" 'insert-braces)
+(global-set-key "\"" 'insert-quotes)
+
+;; shortcuts
+;; (global-set-key [f1] 'ocp-index-print-type)
+;; (global-set-key [f2] 'tuareg-indent-phrase)
+
+;; utf 8
+(set-default-coding-systems 'utf-8)
+(setq default-buffer-file-coding-system 'utf-8)
+(setq locale-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-selection-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+
+(setq auto-mode-alist (cons '("\\.ml\\w?" . tuareg-mode) auto-mode-alist))
+(autoload 'tuareg-mode "tuareg" "Major mode for editing Caml code" t)
+(autoload 'camldebug "camldebug" "Run the Caml debugger" t)
+
+;; ocp-indent
+(add-to-list 'load-path "/home/thomas/.opam/4.02.3/share/emacs/site-lisp")
+(require 'ocp-index)
+(require 'ocp-indent)
+
+(defun insert-ocaml-section-string (title)
+  "Insert a commented OCaml section title at point"
+  (interactive "sSection title: ")
+  (let
+    ((title
+      (replace-regexp-in-string
+       "\\(\n\\)"
+       "" title)))
+    (insert
+     "\n(***************************************"
+     "***************************************)\n(* ")
+    (insert (make-string (- 37 (/ (length title) 2)) ? ))
+    (insert title)
+    (insert
+     (make-string
+      (-
+       (- 37 (/ (length title) 2))
+       (% (length title) 2))
+      ? ))
+    (insert
+     " *)\n(***************************************"
+     "***************************************)\n")))
+
+;; Surround region by \n(********)\n(* Title *)\n(********)\n
+(defun insert-ocaml-section-region (start end)
+  "Insert a commented OCaml section title around region"
+  (interactive "r")
+  (let ((string (buffer-substring start end)))
+    (delete-region start end)
+    (insert-ocaml-section-string string)))
+
+;; Bind M-F9 to the command
+(global-set-key [f9] 'insert-ocaml-section-region)
+
+;; Tex to PDF by default
+ (setq TeX-PDF-mode t)
+
+;; pacakge
+(require 'package)
+(add-to-list 'package-archives
+    '("marmalade" .
+      "http://marmalade-repo.org/packages/"))
+(package-initialize)
+
+
+(require 'whitespace)
+(setq whitespace-style '(face empty tabs trailing))
+;; (setq whitespace-style '(face empty tabs lines-tail trailing))
+(global-whitespace-mode t)
+
+(setq compilation-directory-matcher
+      '("\\(?:Entering\\|Leavin\\(g\\)\\) directory '\\(.+\\)'$" (2 . 1)))
+
+
+;; Add opam emacs directory to the load-path
+(setq opam-share (substring (shell-command-to-string "opam config var share 2> /dev/null") 0 -1))
+(add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
+;; Load merlin-mode
+(require 'merlin)
+;; Start merlin on ocaml files
+(add-hook 'tuareg-mode-hook 'merlin-mode t)
+(add-hook 'caml-mode-hook 'merlin-mode t)
+;; Enable auto-complete
+(require 'auto-complete)
+;; Use opam switch to lookup ocamlmerlin binary
+(setq merlin-command 'opam)
+(setq merlin-use-auto-complete-mode t)
+(global-set-key [f5] 'auto-complete)
+(global-set-key [f6] 'merlin-type-enclosing)
+(define-key ac-complete-mode-map "\t" 'ac-complete)
+(define-key ac-complete-mode-map "\r" nil)
+(setq merlin-command 'opam)
+
+(global-set-key [f1] 'other-window)
+(global-set-key [f2] 'save-buffer)
+(global-set-key [f3] 'find-file)
+(global-set-key [f4] 'kill-this-buffer)
+
+(global-set-key [f11] 'next-error)
+(global-set-key [f12] 'compile)

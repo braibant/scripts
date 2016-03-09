@@ -1,0 +1,114 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
+
+# don't put duplicate lines in the history. See bash(1) for more options
+# don't overwrite GNU Midnight Commander's setting of `ignorespace'.
+export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
+# ... or force ignoredups and ignorespace
+export HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    eval "`dircolors -b`"
+    alias ls='ls --color=auto'
+
+    alias grep='grep --color=auto'
+fi
+
+# some more ls aliases
+alias cd..='cd ..'
+alias rm='rm -i'
+alias l='ls'
+alias time='/usr/bin/time'
+alias e="/Applications/Emacs.app/Contents/MacOS/Emacs"
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi
+
+function prompt_command {
+
+#   Replace $HOME by ~ at the begining
+    if [  "${PWD:0:${#HOME}}" = "$HOME" ]
+    then
+	PWDWITHOUTHOME="~${PWD:${#HOME}}"
+    else
+	PWDWITHOUTHOME="$PWD"
+    fi
+
+#   Find the width of the prompt:
+    TERMWIDTH=${COLUMNS}
+
+#   Add all the accessories below ...
+    local temp="--($(date +%X))--(${HOSTNAME})---(${PWDWITHOUTHOME})--"
+
+    let fillsize=${TERMWIDTH}-${#temp}
+
+    if [ "$fillsize" -gt "0" ]
+    then
+	fill="------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+	#   It's theoretically possible someone could need more
+	#   dashes than above, but very unlikely!  HOWTO users,
+	#   the above should be ONE LINE, it may not cut and
+	#   paste properly
+	fill="${fill:0:${fillsize}}"
+	newPWD="${PWDWITHOUTHOME}"
+    fi
+
+    if [ "$fillsize" -lt "0" ]
+    then
+	fill=""
+	let cut=3-${fillsize}
+	newPWD="...${PWDWITHOUTHOME:${cut}}"
+    fi
+}
+
+PROMPT_COMMAND=prompt_command
+
+WHITE="\[\033[1;37m\]"
+NO_COLOUR="\[\033[0m\]"
+
+LIGHT_BLUE="\[\033[1;34m\]"
+LIGHT_GREEN="\[\033[1;35m\]"
+LIGHT_RED="\[\033[1;31m\]"
+YELLOW="\[\033[1;33m\]"
+
+if [ "$UID" = "0" ]
+then
+  COLOR_DEF="$LIGHT_RED"
+  CHAR_PROMPT="#"
+  PATH="$PATH:/usr/sbin:/sbin"
+else
+  COLOR_DEF="$LIGHT_BLUE"
+  CHAR_PROMPT="\$"
+fi
+
+PS1="$COLOR_DEF--($YELLOW\$(date +%X)$COLOR_DEF)--($YELLOW$HOSTNAME$COLOR_DEF)-\${fill}--($YELLOW\$newPWD$COLOR_DEF)--\n$WHITE\$ $NO_COLOUR"
+
+PS2="$COLOR_DEF-$YELLOW-$YELLOW-$NO_COLOUR "
+
+eval `opam config env`
+
+alias emacs='emacs'
+
+export EDITOR='emacs'
+
+export PATH="$PATH:$HOME/local/bin"

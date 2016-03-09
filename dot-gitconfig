@@ -1,0 +1,5 @@
+[user]
+	email = thomas.braibant@gmail.com
+	name = thomas.braibant@gmail.com
+[push]
+	default = simple
